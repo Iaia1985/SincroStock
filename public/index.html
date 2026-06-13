@@ -1,202 +1,37 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stock Sync - Panel</title>
-  <style>
-    :root {
-      --bg: #F7F5F0;
-      --ink: #1A2E35;
-      --ok: #5B8C5A;
-      --low: #E0973C;
-      --out: #C1453F;
-    }
-    * { box-sizing: border-box; font-family: -apple-system, Segoe UI, Roboto, sans-serif; }
-    body { margin: 0; background: var(--bg); color: var(--ink); }
-    header {
-      border-bottom: 2px solid var(--ink);
-      padding: 16px 20px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    header h1 { font-family: monospace; font-size: 18px; margin: 0; letter-spacing: 1px; }
-    main { max-width: 800px; margin: 0 auto; padding: 20px; }
-    .row {
-      border: 2px solid var(--ink); border-radius: 4px; background: white;
-      display: flex; align-items: center; margin-bottom: 8px; overflow: hidden;
-    }
-    .tab { width: 8px; align-self: stretch; flex-shrink: 0; }
-    .tab.ok { background: var(--ok); }
-    .tab.low { background: var(--low); }
-    .tab.out { background: var(--out); }
-    .row-content { flex: 1; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-    .sku { font-family: monospace; font-size: 11px; color: #1A2E3580; letter-spacing: 1px; }
-    .name { font-weight: 600; font-size: 14px; flex: 1; min-width: 160px; }
-    .badge {
-      font-family: monospace; font-size: 10px; font-weight: bold;
-      border: 1px solid #1A2E3540; border-radius: 3px; padding: 2px 5px;
-      background: var(--bg);
-    }
-    .stock { font-family: monospace; font-weight: bold; font-size: 18px; }
-    .status {
-      font-family: monospace; font-size: 10px; font-weight: bold; text-transform: uppercase;
-      border-radius: 3px; padding: 2px 6px; border: 1px solid currentColor;
-    }
-    .status.ok { color: var(--ok); }
-    .status.low { color: var(--low); }
-    .status.out { color: var(--out); }
-
-    section { margin-top: 30px; border-top: 1px solid #1A2E3530; padding-top: 20px; }
-    h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #1A2E3580; }
-    form { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-    input {
-      border: 2px solid var(--ink); border-radius: 4px; padding: 8px 10px;
-      font-size: 13px; flex: 1; min-width: 100px;
-    }
-    button {
-      border: 2px solid var(--ink); border-radius: 4px; background: var(--ink);
-      color: var(--bg); padding: 8px 14px; font-size: 13px; cursor: pointer;
-      font-weight: bold;
-    }
-    .stores-list { font-size: 13px; line-height: 1.6; }
-    .empty { text-align: center; padding: 30px; color: #1A2E3550; font-family: monospace; font-size: 13px; }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>DEPÓSITO::CENTRAL</h1>
-    <div id="store-count" style="font-family: monospace; font-size: 12px; color: #4A7C7C;"></div>
-  </header>
-
-  <main>
-    <div id="sku-list"></div>
-    <div id="empty-msg" class="empty" style="display:none;">
-      Todavía no hay SKUs cargados. Agregá el primero abajo 👇
-    </div>
-
-    <section>
-      <h2>Agregar / actualizar SKU del depósito</h2>
-      <form id="sku-form">
-        <input name="sku" placeholder="SKU (ej: REM-AZ-M)" required />
-        <input name="name" placeholder="Nombre del producto" required />
-        <input name="stock" type="number" placeholder="Stock" required />
-        <input name="threshold" type="number" placeholder="Alerta si baja de" value="5" />
-        <button type="submit">Guardar</button>
-      </form>
-    </section>
-
-    <section>
-      <h2>Conectar producto de una tienda a un SKU</h2>
-      <form id="mapping-form">
-        <input name="sku" placeholder="SKU del depósito" required />
-        <input name="store_id" placeholder="ID de tienda" required />
-        <input name="product_id" placeholder="ID de producto (Tienda Nube)" required />
-        <input name="variant_id" placeholder="ID de variante (Tienda Nube)" required />
-        <button type="submit">Vincular</button>
-      </form>
-    </section>
-
-    <section>
-      <h2>Tiendas conectadas</h2>
-      <div id="stores" class="stores-list"></div>
-      <p style="font-size:13px; margin-top:10px;">
-        Para conectar una tienda nueva: entrá al admin de esa tienda y abrí
-        <code id="connect-url"></code>
-      </p>
-    </section>
-  </main>
-
-  <script>
-    async function loadSkus() {
-      const res = await fetch("/api/skus");
-      const skus = await res.json();
-      const list = document.getElementById("sku-list");
-      const empty = document.getElementById("empty-msg");
-      list.innerHTML = "";
-
-      if (skus.length === 0) {
-        empty.style.display = "block";
-        return;
-      }
-      empty.style.display = "none";
-
-      for (const item of skus) {
-        let status = "ok";
-        if (item.stock === 0) status = "out";
-        else if (item.stock <= item.threshold) status = "low";
-
-        const labels = { ok: "OK", low: "Stock bajo", out: "Agotado" };
-
-        const row = document.createElement("div");
-        row.className = "row";
-        row.innerHTML = `
-          <div class="tab ${status}"></div>
-          <div class="row-content">
-            <div style="min-width:160px;">
-              <div class="sku">${item.sku}</div>
-              <div class="name">${item.name}</div>
-            </div>
-            <div style="display:flex; gap:4px; flex-wrap:wrap;">
-              ${item.stores.map(s => `<span class="badge" title="${s.store_name}">${s.store_id}</span>`).join("")}
-            </div>
-            <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
-              <span class="stock">${item.stock}</span>
-              <span class="status ${status}">${labels[status]}</span>
-            </div>
-          </div>
-        `;
-        list.appendChild(row);
-      }
-    }
-
-    async function loadStores() {
-      const res = await fetch("/api/stores");
-      const stores = await res.json();
-      document.getElementById("store-count").textContent = `${stores.length} tiendas conectadas`;
-      const div = document.getElementById("stores");
-      div.innerHTML = stores.length
-        ? stores.map(s => `<div>• <strong>${s.name}</strong> — ID: ${s.store_id}</div>`).join("")
-        : "<div>Todavía no conectaste ninguna tienda.</div>";
-    }
-
-    document.getElementById("sku-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const f = new FormData(e.target);
-      await fetch("/api/skus", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sku: f.get("sku"),
-          name: f.get("name"),
-          stock: Number(f.get("stock")),
-          threshold: Number(f.get("threshold")),
-        }),
-      });
-      e.target.reset();
-      loadSkus();
-    });
-
-    document.getElementById("mapping-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const f = new FormData(e.target);
-      await fetch("/api/mapping", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sku: f.get("sku"),
-          store_id: f.get("store_id"),
-          product_id: f.get("product_id"),
-          variant_id: f.get("variant_id"),
-        }),
-      });
-      e.target.reset();
-      loadSkus();
-    });
-
-    document.getElementById("connect-url").textContent = `${location.origin}/connect`;
-
-    loadSkus();
-    loadStores();
-  </script>
-</body>
-</html>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <title>Stock Sync - Panel</title>
+ <style>
+   :root {
+     --bg: #F7F5F0;
+     --ink: #1A2E35;
+     --ok: #5B8C5A;
+     --low: #E0973C;
+     --out: #C1453F;
+   }
+   * { box-sizing: border-box; font-family: -apple-system, Segoe UI, Roboto, sans-serif; }
+   body { margin: 0; background: var(--bg); color: var(--ink); }
+   header {
+     border-bottom: 2px solid var(--ink);
+     padding: 16px 20px;
+     display: flex; justify-content: space-between; align-items: center;
+   }
+   header h1 { font-family: monospace; font-size: 18px; margin: 0; letter-spacing: 1px; }
+   main { max-width: 800px; margin: 0 auto; padding: 20px; }
+   .row {
+     border: 2px solid var(--ink); border-radius: 4px; background: white;
+     display: flex; align-items: center; margin-bottom: 8px; overflow: hidden;
+   }
+   .tab { width: 8px; align-self: stretch; flex-shrink: 0; }
+   .tab.ok { background: var(--ok); }
+   .tab.low { background: var(--low); }
+   .tab.out { background: var(--out); }
+   .row-content { flex: 1; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+   .sku { font-family: monospace; font-size: 11px; color: #1A2E3580; letter-spacing: 1px; }
+   .name { font-weight: 600; font-size: 14px; flex: 1; min-width: 160px; }
+   .badge {
+     font-family: monospace; font-size: 10px; font-weight: bold;
+     border: 1px solid #1A2E3540; border-radius: 3px; padding: 2px
