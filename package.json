@@ -1,0 +1,17 @@
+{
+  "name": "stock-sync",
+  "version": "1.0.0",
+  "description": "Sincronizacion de stock entre tiendas Tienda Nube usando un deposito central",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.11.3"
+  }
+}
