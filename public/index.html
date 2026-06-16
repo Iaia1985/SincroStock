@@ -72,6 +72,10 @@
      Todavía no hay SKUs cargados. Agregá el primero abajo 👇
    </div>
 
+   <div style="text-align:right; margin-top:10px;">
+     <button id="sync-btn" style="background:#4A7C7C; border-color:#4A7C7C;">⟳ Sincronizar stock a todas las tiendas</button>
+   </div>
+
    <section>
      <h2>Agregar / actualizar SKU del depósito</h2>
      <form id="sku-form">
@@ -161,6 +165,21 @@
        ? stores.map(s => `<option value="${s.store_id}">${s.name} (${s.store_id})</option>`).join("")
        : "<option value=''>Conectá una tienda primero</option>";
    }
+
+   document.getElementById("sync-btn").addEventListener("click", async () => {
+     const btn = document.getElementById("sync-btn");
+     btn.textContent = "Sincronizando...";
+     btn.disabled = true;
+     try {
+       const res = await fetch("/api/sync-all", { method: "POST" });
+       const data = await res.json();
+       alert(`✅ Sincronización completada: ${data.updated} SKUs actualizados en todas las tiendas.${data.errors > 0 ? ` (${data.errors} errores)` : ""}`);
+     } catch (e) {
+       alert("Error al sincronizar. Intentá de nuevo.");
+     }
+     btn.textContent = "⟳ Sincronizar stock a todas las tiendas";
+     btn.disabled = false;
+   });
 
    document.getElementById("finder-form").addEventListener("submit", async (e) => {
      e.preventDefault();
