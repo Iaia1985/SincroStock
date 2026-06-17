@@ -5,90 +5,60 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
  <title>Stock Sync - Panel</title>
  <style>
-   :root {
-     --bg: #F7F5F0;
-     --ink: #1A2E35;
-     --ok: #5B8C5A;
-     --low: #E0973C;
-     --out: #C1453F;
-   }
+   :root { --bg: #F7F5F0; --ink: #1A2E35; --ok: #5B8C5A; --low: #E0973C; --out: #C1453F; }
    * { box-sizing: border-box; font-family: -apple-system, Segoe UI, Roboto, sans-serif; }
    body { margin: 0; background: var(--bg); color: var(--ink); }
-   header {
-     border-bottom: 2px solid var(--ink);
-     padding: 16px 20px;
-     display: flex; justify-content: space-between; align-items: center;
-   }
+   header { border-bottom: 2px solid var(--ink); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
    header h1 { font-family: monospace; font-size: 18px; margin: 0; letter-spacing: 1px; }
    main { max-width: 800px; margin: 0 auto; padding: 20px; }
-   .row {
-     border: 2px solid var(--ink); border-radius: 4px; background: white;
-     display: flex; align-items: center; margin-bottom: 8px; overflow: hidden;
-   }
+   .row { border: 2px solid var(--ink); border-radius: 4px; background: white; display: flex; align-items: center; margin-bottom: 8px; overflow: hidden; }
    .tab { width: 8px; align-self: stretch; flex-shrink: 0; }
-   .tab.ok { background: var(--ok); }
-   .tab.low { background: var(--low); }
-   .tab.out { background: var(--out); }
+   .tab.ok { background: var(--ok); } .tab.low { background: var(--low); } .tab.out { background: var(--out); }
    .row-content { flex: 1; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
    .sku { font-family: monospace; font-size: 11px; color: #1A2E3580; letter-spacing: 1px; }
    .name { font-weight: 600; font-size: 14px; flex: 1; min-width: 160px; }
-   .badge {
-     font-family: monospace; font-size: 10px; font-weight: bold;
-     border: 1px solid #1A2E3540; border-radius: 3px; padding: 2px 5px;
-     background: var(--bg);
-   }
+   .badge { font-family: monospace; font-size: 10px; font-weight: bold; border: 1px solid #1A2E3540; border-radius: 3px; padding: 2px 5px; background: var(--bg); }
    .stock { font-family: monospace; font-weight: bold; font-size: 18px; }
-   .status {
-     font-family: monospace; font-size: 10px; font-weight: bold; text-transform: uppercase;
-     border-radius: 3px; padding: 2px 6px; border: 1px solid currentColor;
-   }
-   .status.ok { color: var(--ok); }
-   .status.low { color: var(--low); }
-   .status.out { color: var(--out); }
+   .status { font-family: monospace; font-size: 10px; font-weight: bold; text-transform: uppercase; border-radius: 3px; padding: 2px 6px; border: 1px solid currentColor; }
+   .status.ok { color: var(--ok); } .status.low { color: var(--low); } .status.out { color: var(--out); }
    section { margin-top: 30px; border-top: 1px solid #1A2E3530; padding-top: 20px; }
    h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #1A2E3580; }
    form { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-   input {
-     border: 2px solid var(--ink); border-radius: 4px; padding: 8px 10px;
-     font-size: 13px; flex: 1; min-width: 100px;
-   }
-   button {
-     border: 2px solid var(--ink); border-radius: 4px; background: var(--ink);
-     color: var(--bg); padding: 8px 14px; font-size: 13px; cursor: pointer;
-     font-weight: bold;
-   }
+   input { border: 2px solid var(--ink); border-radius: 4px; padding: 8px 10px; font-size: 13px; flex: 1; min-width: 100px; }
+   button { border: 2px solid var(--ink); border-radius: 4px; background: var(--ink); color: var(--bg); padding: 8px 14px; font-size: 13px; cursor: pointer; font-weight: bold; }
+   select { border: 2px solid var(--ink); border-radius: 4px; padding: 8px 10px; font-size: 13px; flex: 1; min-width: 160px; }
    .stores-list { font-size: 13px; line-height: 1.6; }
    .empty { text-align: center; padding: 30px; color: #1A2E3550; font-family: monospace; font-size: 13px; }
+   .btn-green { background: #5B8C5A; border-color: #5B8C5A; }
+   .btn-teal { background: #4A7C7C; border-color: #4A7C7C; }
  </style>
 </head>
 <body>
  <header>
    <h1>DEPÓSITO::CENTRAL</h1>
-   <div id="store-count" style="font-family: monospace; font-size: 12px; color: #4A7C7C;"></div>
+   <div id="store-count" style="font-family:monospace;font-size:12px;color:#4A7C7C;"></div>
  </header>
  <main>
    <div id="sku-list"></div>
-   <div id="empty-msg" class="empty" style="display:none;">
-     Todavía no hay SKUs cargados. Agregá el primero abajo 👇
-   </div>
+   <div id="empty-msg" class="empty" style="display:none;">Todavía no hay SKUs cargados. Importá los productos de Nena Zapatos abajo 👇</div>
 
-   <div style="text-align:right; margin-top:10px;">
-     <button id="sync-btn" style="background:#4A7C7C; border-color:#4A7C7C;">⟳ Sincronizar stock a todas las tiendas</button>
+   <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+     <button id="import-btn" class="btn-green">⬇ Importar productos de Nena Zapatos</button>
+     <button id="sync-btn" class="btn-teal">⟳ Sincronizar stock a todas las tiendas</button>
    </div>
 
    <section>
-     <h2>Agregar / actualizar SKU del depósito</h2>
-     <form id="sku-form">
-       <input name="sku" placeholder="SKU (ej: REM-AZ-M)" required />
-       <input name="name" placeholder="Nombre del producto" required />
-       <input name="stock" type="number" placeholder="Stock" required />
-       <input name="threshold" type="number" placeholder="Alerta si baja de" value="5" />
-       <button type="submit">Guardar</button>
-     </form>
+     <h2>Vincular tienda por SKU</h2>
+     <p style="font-size:13px;margin:0 0 8px;">Seleccioná una tienda y el sistema vincula automáticamente todos los productos que tengan el mismo SKU que Nena Zapatos.</p>
+     <div style="display:flex;gap:8px;flex-wrap:wrap;">
+       <select id="link-store"></select>
+       <button id="link-btn" class="btn-green">🔗 Vincular por SKU</button>
+     </div>
+     <div id="link-result" style="font-size:13px;margin-top:8px;"></div>
    </section>
 
    <section>
-     <h2>Conectar producto de una tienda a un SKU</h2>
+     <h2>Vincular producto manualmente</h2>
      <form id="mapping-form">
        <input name="sku" placeholder="SKU del depósito" required />
        <input name="store_id" placeholder="ID de tienda" required />
@@ -101,7 +71,7 @@
    <section>
      <h2>Buscar IDs de producto y variante</h2>
      <form id="finder-form">
-       <select name="store_id" id="finder-store" required style="flex:1; min-width:160px; border:2px solid var(--ink); border-radius:4px; padding:8px 10px; font-size:13px;"></select>
+       <select id="finder-store"></select>
        <button type="submit">Cargar productos</button>
      </form>
      <div id="finder-results" style="font-size:13px;"></div>
@@ -110,10 +80,7 @@
    <section>
      <h2>Tiendas conectadas</h2>
      <div id="stores" class="stores-list"></div>
-     <p style="font-size:13px; margin-top:10px;">
-       Para conectar una tienda nueva: entrá al admin de esa tienda y abrí
-       <code id="connect-url"></code>
-     </p>
+     <p style="font-size:13px;margin-top:10px;">Para conectar una tienda nueva: entrá al admin de esa tienda y abrí <code id="connect-url"></code></p>
    </section>
  </main>
 
@@ -136,14 +103,9 @@
        row.innerHTML = `
          <div class="tab ${status}"></div>
          <div class="row-content">
-           <div style="min-width:160px;">
-             <div class="sku">${item.sku}</div>
-             <div class="name">${item.name}</div>
-           </div>
-           <div style="display:flex; gap:4px; flex-wrap:wrap;">
-             ${item.stores.map(s => `<span class="badge" title="${s.store_name}">${s.store_id}</span>`).join("")}
-           </div>
-           <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
+           <div style="min-width:160px;"><div class="sku">${item.sku}</div><div class="name">${item.name}</div></div>
+           <div style="display:flex;gap:4px;flex-wrap:wrap;">${item.stores.map(s => `<span class="badge" title="${s.store_name}">${s.store_id}</span>`).join("")}</div>
+           <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
              <span class="stock">${item.stock}</span>
              <span class="status ${status}">${labels[status]}</span>
            </div>
@@ -155,30 +117,59 @@
    async function loadStores() {
      const res = await fetch("/api/stores");
      const stores = await res.json();
-     document.getElementById("store-count").textContent = `${stores.length} tiendas conectadas`;
-     const div = document.getElementById("stores");
-     div.innerHTML = stores.length
+     document.getElementById("store-count").textContent = stores.length + " tiendas conectadas";
+     document.getElementById("stores").innerHTML = stores.length
        ? stores.map(s => `<div>• <strong>${s.name}</strong> — ID: ${s.store_id}</div>`).join("")
        : "<div>Todavía no conectaste ninguna tienda.</div>";
-     const select = document.getElementById("finder-store");
-     select.innerHTML = stores.length
+
+     const slaveStores = stores.filter(s => s.store_id !== "7840052");
+
+     const linkSel = document.getElementById("link-store");
+     linkSel.innerHTML = slaveStores.length
+       ? slaveStores.map(s => `<option value="${s.store_id}">${s.name} (${s.store_id})</option>`).join("")
+       : "<option value=''>No hay otras tiendas conectadas</option>";
+
+     const finderSel = document.getElementById("finder-store");
+     finderSel.innerHTML = stores.length
        ? stores.map(s => `<option value="${s.store_id}">${s.name} (${s.store_id})</option>`).join("")
        : "<option value=''>Conectá una tienda primero</option>";
    }
 
+   document.getElementById("import-btn").addEventListener("click", async () => {
+     const btn = document.getElementById("import-btn");
+     btn.textContent = "Importando..."; btn.disabled = true;
+     try {
+       const res = await fetch("/api/import-master", { method: "POST" });
+       const data = await res.json();
+       alert("✅ Importación completada: " + data.imported + " variantes importadas." + (data.skipped > 0 ? " (" + data.skipped + " sin SKU, ignoradas)" : ""));
+       loadSkus();
+     } catch (e) { alert("Error al importar. Intentá de nuevo."); }
+     btn.textContent = "⬇ Importar productos de Nena Zapatos"; btn.disabled = false;
+   });
+
+   document.getElementById("link-btn").addEventListener("click", async () => {
+     const storeId = document.getElementById("link-store").value;
+     if (!storeId) return alert("Seleccioná una tienda primero.");
+     const btn = document.getElementById("link-btn");
+     btn.textContent = "Vinculando..."; btn.disabled = true;
+     try {
+       const res = await fetch("/api/link-by-sku/" + storeId, { method: "POST" });
+       const data = await res.json();
+       document.getElementById("link-result").textContent = "✅ " + data.linked + " productos vinculados." + (data.notFound > 0 ? " (" + data.notFound + " SKUs no encontrados en el catálogo maestro)" : "");
+       loadSkus();
+     } catch (e) { document.getElementById("link-result").textContent = "Error al vincular."; }
+     btn.textContent = "🔗 Vincular por SKU"; btn.disabled = false;
+   });
+
    document.getElementById("sync-btn").addEventListener("click", async () => {
      const btn = document.getElementById("sync-btn");
-     btn.textContent = "Sincronizando...";
-     btn.disabled = true;
+     btn.textContent = "Sincronizando..."; btn.disabled = true;
      try {
        const res = await fetch("/api/sync-all", { method: "POST" });
        const data = await res.json();
-       alert(`✅ Sincronización completada: ${data.updated} SKUs actualizados en todas las tiendas.${data.errors > 0 ? ` (${data.errors} errores)` : ""}`);
-     } catch (e) {
-       alert("Error al sincronizar. Intentá de nuevo.");
-     }
-     btn.textContent = "⟳ Sincronizar stock a todas las tiendas";
-     btn.disabled = false;
+       alert("✅ Sincronización completada: " + data.updated + " SKUs actualizados en todas las tiendas." + (data.errors > 0 ? " (" + data.errors + " errores)" : ""));
+     } catch (e) { alert("Error al sincronizar. Intentá de nuevo."); }
+     btn.textContent = "⟳ Sincronizar stock a todas las tiendas"; btn.disabled = false;
    });
 
    document.getElementById("finder-form").addEventListener("submit", async (e) => {
@@ -187,26 +178,23 @@
      const results = document.getElementById("finder-results");
      if (!storeId) return;
      results.innerHTML = "Cargando productos...";
-     const res = await fetch(`/api/stores/${storeId}/products`);
+     const res = await fetch("/api/stores/" + storeId + "/products");
      const products = await res.json();
-     if (!Array.isArray(products) || products.length === 0) {
-       results.innerHTML = "No se encontraron productos.";
-       return;
-     }
+     if (!Array.isArray(products) || products.length === 0) { results.innerHTML = "No se encontraron productos."; return; }
      results.innerHTML = products.map(p => `
-       <div style="border:2px solid var(--ink); border-radius:4px; margin-top:10px; padding:8px 10px; background:white;">
-         <div style="font-weight:600; margin-bottom:4px;">${p.name} <span style="font-family:monospace; font-size:11px; color:#1A2E3580;">(producto: ${p.id})</span></div>
+       <div style="border:2px solid var(--ink);border-radius:4px;margin-top:10px;padding:8px 10px;background:white;">
+         <div style="font-weight:600;margin-bottom:4px;">${p.name} <span style="font-family:monospace;font-size:11px;color:#1A2E3580;">(producto: ${p.id})</span></div>
          ${p.variants.map(v => `
-           <div style="display:flex; align-items:center; gap:8px; padding:4px 0; flex-wrap:wrap;">
-             <span style="flex:1; min-width:100px;">${v.values || "Única"} ${v.sku ? `<span style="font-family:monospace; font-size:11px; color:#1A2E3580;">SKU: ${v.sku}</span>` : ""}</span>
-             <span style="font-family:monospace; font-size:12px;">variante: ${v.id}</span>
-             <button type="button" data-product="${p.id}" data-variant="${v.id}" class="use-ids-btn">Usar IDs</button>
+           <div style="display:flex;align-items:center;gap:8px;padding:4px 0;flex-wrap:wrap;">
+             <span style="flex:1;min-width:100px;">${v.values || "Única"} ${v.sku ? `<span style="font-family:monospace;font-size:11px;color:#1A2E3580;">SKU: ${v.sku}</span>` : ""}</span>
+             <span style="font-family:monospace;font-size:12px;">variante: ${v.id}</span>
+             <button type="button" data-product="${p.id}" data-variant="${v.id}" data-store="${storeId}" class="use-ids-btn">Usar IDs</button>
            </div>`).join("")}
        </div>`).join("");
      results.querySelectorAll(".use-ids-btn").forEach(btn => {
        btn.addEventListener("click", () => {
          const form = document.getElementById("mapping-form");
-         form.querySelector('[name="store_id"]').value = storeId;
+         form.querySelector('[name="store_id"]').value = btn.dataset.store;
          form.querySelector('[name="product_id"]').value = btn.dataset.product;
          form.querySelector('[name="variant_id"]').value = btn.dataset.variant;
          form.querySelector('[name="sku"]').focus();
@@ -215,37 +203,17 @@
      });
    });
 
-   document.getElementById("sku-form").addEventListener("submit", async (e) => {
-     e.preventDefault();
-     const f = new FormData(e.target);
-     await fetch("/api/skus", {
-       method: "POST",
-       headers: { "Content-Type": "application/json" },
-       body: JSON.stringify({
-         sku: f.get("sku"), name: f.get("name"),
-         stock: Number(f.get("stock")), threshold: Number(f.get("threshold")),
-       }),
-     });
-     e.target.reset();
-     loadSkus();
-   });
-
    document.getElementById("mapping-form").addEventListener("submit", async (e) => {
      e.preventDefault();
      const f = new FormData(e.target);
      await fetch("/api/mapping", {
-       method: "POST",
-       headers: { "Content-Type": "application/json" },
-       body: JSON.stringify({
-         sku: f.get("sku"), store_id: f.get("store_id"),
-         product_id: f.get("product_id"), variant_id: f.get("variant_id"),
-       }),
+       method: "POST", headers: { "Content-Type": "application/json" },
+       body: JSON.stringify({ sku: f.get("sku"), store_id: f.get("store_id"), product_id: f.get("product_id"), variant_id: f.get("variant_id") }),
      });
-     e.target.reset();
-     loadSkus();
+     e.target.reset(); loadSkus();
    });
 
-   document.getElementById("connect-url").textContent = `${location.origin}/connect`;
+   document.getElementById("connect-url").textContent = location.origin + "/connect";
    loadSkus();
    loadStores();
  </script>
