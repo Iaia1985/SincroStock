@@ -130,6 +130,84 @@ async function pushStockToAllStores(sku, newStock, excludeStoreId) {
  }
 }
 
+app.post("/api/import-master", async (req, res) => {
+ try {
+   const masterRes = await pool.query("SELECT * FROM stores WHERE store_id = $1", [MASTER_STORE_ID]);
+   const master = masterRes.rows[0];
+   if (!master) return res.status(400).json({ error: "Tienda maestra no conectada" });
+   let page = 1; let imported = 0; let skipped = 0;
+   while (true) {
+     const resp = await fetch("https://api.tiendanube.com/2025-03/" + MASTER_STORE_ID + "/products?per_page=50&page=" + page, {
+       headers: { Authentication: "bearer " + master.access_token, "User-Agent": USER_AGENT },
+     });
+     const products = await resp.json();
+     if (!Array.isArray(products) || products.length === 0) break;
+     for (const product of products) {
+       const name = product.name?.es || product.name?.pt || product.name?.en || "Producto " + product.id;
+       for (const variant of (product.variants || [])) {
+         const sku = variant.sku;
+         if (!sku) { skipped++; continue; }
+         const stock = Number(variant.stock || 0);
+         const variantName = name + ((variant.values || []).map(v => v.es || v.pt || "").filter(Boolean).length > 0
+           ? " - " + (variant.values || []).map(v => v.es || v.pt || "").filter(Boolean).join(" / ") : "");
+         await pool.query(
+           "INSERT INTO master_skus (sku, name, stock, threshold) VALUES ($1, $2, $3, $4) ON CONFLICT (sku) DO UPDATE SET name = $2, stock = $3",
+           [sku, variantName, stock, 5]
+         );
+         await pool.query(
+           "INSERT INTO sku_mapping (sku, store_id, product_id, variant_id) VALUES ($1, $2, $3, $4) ON CONFLICT (sku, store_id) DO UPDATE SET product_id = $3, variant_id = $4",
+           [sku, MASTER_STORE_ID, String(product.id), String(variant.id)]
+         );
+         imported++;
+       }
+     }
+     if (products.length < 50) break;
+     page++;
+   }
+   res.json({ ok: true, imported, skipped });
+ } catch (e) {
+   console.error("Error importando:", e.message);
+   res.status(500).json({ error: "Error importando productos" });
+ }
+});
+
+app.post("/api/link-by-sku/:storeId", async (req, res) => {
+ const { storeId } = req.params;
+ if (storeId === MASTER_STORE_ID) return res.status(400).json({ error: "No se puede vincular la tienda maestra con este metodo" });
+ try {
+   const storeRes = await pool.query("SELECT * FROM stores WHERE store_id = $1", [storeId]);
+   const store = storeRes.rows[0];
+   if (!store) return res.status(404).json({ error: "Tienda no encontrada" });
+   let page = 1; let linked = 0; let notFound = 0;
+   while (true) {
+     const resp = await fetch("https://api.tiendanube.com/2025-03/" + storeId + "/products?per_page=50&page=" + page, {
+       headers: { Authentication: "bearer " + store.access_token, "User-Agent": USER_AGENT },
+     });
+     const products = await resp.json();
+     if (!Array.isArray(products) || products.length === 0) break;
+     for (const product of products) {
+       for (const variant of (product.variants || [])) {
+         const sku = variant.sku;
+         if (!sku) continue;
+         const skuExists = await pool.query("SELECT sku FROM master_skus WHERE sku = $1", [sku]);
+         if (skuExists.rows.length === 0) { notFound++; continue; }
+         await pool.query(
+           "INSERT INTO sku_mapping (sku, store_id, product_id, variant_id) VALUES ($1, $2, $3, $4) ON CONFLICT (sku, store_id) DO UPDATE SET product_id = $3, variant_id = $4",
+           [sku, storeId, String(product.id), String(variant.id)]
+         );
+         linked++;
+       }
+     }
+     if (products.length < 50) break;
+     page++;
+   }
+   res.json({ ok: true, linked, notFound });
+ } catch (e) {
+   console.error("Error vinculando:", e.message);
+   res.status(500).json({ error: "Error vinculando productos" });
+ }
+});
+
 app.get("/api/stores", async (req, res) => {
  const result = await pool.query("SELECT store_id, name, created_at FROM stores ORDER BY id");
  res.json(result.rows);
@@ -154,9 +232,7 @@ app.get("/api/stores/:storeId/products", async (req, res) => {
      })),
    }));
    res.json(simplified);
- } catch (e) {
-   res.status(500).json({ error: "No se pudo obtener productos" });
- }
+ } catch (e) { res.status(500).json({ error: "No se pudo obtener productos" }); }
 });
 
 app.get("/api/skus", async (req, res) => {
